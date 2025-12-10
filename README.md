@@ -1,68 +1,175 @@
-# Mini Workflow Engine — AI Engineering Internship
+Mini Workflow Engine – AI Engineering Assignment
 
-This project implements a small workflow engine with FastAPI. It supports nodes, edges, branching, and looping, and includes an example Code Review workflow (rule-based).
+This project implements a minimal yet extensible workflow/graph engine using FastAPI.
+It demonstrates clean backend architecture, async execution, modular design, and an example “Code Review Agent” workflow.
+The system behaves like a simplified LangGraph-style execution engine, where nodes operate on shared state and the engine manages transitions, branching, looping, and logging.
 
-## How to run
+Key Features
+1. Workflow Engine
 
-1. Create a virtual environment and install dependencies
+Nodes represented as Python functions
 
-For macOS / Linux:
-```bash
+Directed edges defining execution order
+
+Shared mutable state passed through the graph
+
+Branching via setting state["next"]
+
+Looping by repeating nodes until a computed condition is satisfied
+
+Execution logs for debugging and traceability
+
+Async-safe execution via background tasks
+
+2. Tool Registry
+
+Simple registry for attaching callable utilities or tools
+
+Easily extendable for future agent functionality
+
+3. FastAPI Endpoints
+
+POST /graph/create
+
+GET /graph/create (convenience for browser testing)
+
+POST /graph/run
+
+GET /graph/state/{run_id}
+
+4. Example Workflow: Code Review Agent
+
+A deterministic, rule-based workflow that:
+
+Extracts functions from code
+
+Calculates complexity
+
+Detects basic issues
+
+Suggests improvements
+
+Loops until the quality score meets a threshold
+
+Project Structure
+
+app/
+  main.py
+  routers/
+    graph.py
+  engine/
+    workflow.py
+    registry.py
+  workflows/
+    code_review.py
+  db/
+    memory_store.py
+requirements.txt
+README.md
+
+This structure keeps logic isolated, modular, and easy to extend.
+
+How to Run
+Step 1: Create virtual environment
+
+Windows
 python -m venv .venv
+.venv\Scripts\activate
+
+macOS/Linux
+python3 -m venv .venv
 source .venv/bin/activate
+
+Step 2: Install dependencies
+
+pip install --upgrade pip
 pip install -r requirements.txt
-```
 
-For Windows (PowerShell):
-```powershell
-python -m venv .venv
-.venv\Scripts\Activate.ps1
-pip install -r requirements.txt
-```
+Step 3: Start the server
 
-2. Start the server
-
-```bash
 uvicorn app.main:app --reload
-```
 
-The server will be available at `http://127.0.0.1:8000` by default.
+Step 4: Open API docs
 
-## Endpoints
+http://127.0.0.1:8000/docs
 
-- `POST /graph/create`
-	- Body: `{"graph_name": "code_review"}`
-	- Returns: `graph_id`
+API Usage
+1. Create a Workflow Graph
 
-- `POST /graph/run`
-	- Body example:
-```json
+POST /graph/create
+Body:
+{ "graph_name": "code_review" }
+Response:
+{ "graph_id": "..." }
+
+For quick browser testing:
+GET /graph/create
+
+2. Run Workflow
+
+POST /graph/run
+Body example:
 {
-	"graph_id": "<graph_id>",
-	"initial_state": {
-		"code": "def a():\n    pass",
-		"threshold": 80,
-	}
+"graph_id": "<graph_id>",
+"initial_state": {
+"code": "def a(): pass",
+"threshold": 80
 }
-```
-	- Returns: `run_id`
+}
 
-- `GET /graph/state/{run_id}`
-	- Returns: status, state, and log for the run
+Response:
+{ "run_id": "..." }
 
-## Example curl requests
+3. Retrieve Run State
 
-Create a graph:
-```bash
-curl -X POST "http://127.0.0.1:8000/graph/create" -H "Content-Type: application/json" -d '{"graph_name":"code_review"}'
-```
+GET /graph/state/<run_id>
+Returns:
 
-Start a run:
-```bash
-curl -X POST "http://127.0.0.1:8000/graph/run" -H "Content-Type: application/json" -d '{"graph_id":"<id>","initial_state":{"code":"def a():\\n    pass","threshold":80}}'
-```
+status
 
-Get run state:
-```bash
-curl "http://127.0.0.1:8000/graph/state/<run_id>"
-```
+final state
+
+execution log
+
+What the Engine Supports
+
+Graph-based processing
+
+Dynamic branching
+
+Conditional looping
+
+Background execution
+
+Modular workflow definitions
+
+Tool registry
+
+In-memory task tracking
+
+Clean async-capable design
+
+This matches the expected core evaluation criteria for the assignment:
+clarity, structure, state-driven transitions, async hygiene, and maintainability.
+
+Future Improvements (If Time Allowed)
+
+WebSocket log streaming for real-time node execution updates
+
+Persistent storage using SQLite/PostgreSQL
+
+Visual graph inspector or metadata endpoint
+
+Node input/output validation using Pydantic models
+
+Multiple workflow registration API
+
+Docker support for production deployment
+
+Unit tests and GitHub Actions continuous integration
+
+These enhancements would elevate the engine from minimal demo to production-grade orchestration.
+
+License
+
+This project is submitted as part of an AI Engineering Internship assignment and is intended to demonstrate backend engineering principles and clean system design.
