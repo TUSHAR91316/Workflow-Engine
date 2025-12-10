@@ -1,175 +1,163 @@
+Here is a well-structured, professional README.md file formatted for a GitHub repository. It organizes the raw information you provided into a clean, readable, and technical documentation standard suitable for an engineering assignment submission.
+
 Mini Workflow Engine – AI Engineering Assignment
+A minimal yet extensible workflow/graph execution engine built with FastAPI.
 
-This project implements a minimal yet extensible workflow/graph engine using FastAPI.
-It demonstrates clean backend architecture, async execution, modular design, and an example “Code Review Agent” workflow.
-The system behaves like a simplified LangGraph-style execution engine, where nodes operate on shared state and the engine manages transitions, branching, looping, and logging.
+This project implements a simplified LangGraph-style execution engine where nodes operate on a shared state. It demonstrates clean backend architecture, asynchronous execution, modular design, and includes a functional "Code Review Agent" workflow to showcase branching, looping, and state management.
 
-Key Features
+🚀 Key Features
 1. Workflow Engine
+Graph-Based Processing: Nodes are represented as Python functions connected by directed edges.
 
-Nodes represented as Python functions
+Shared State: A mutable state dictionary is passed through the graph, allowing data persistence between steps.
 
-Directed edges defining execution order
+Dynamic Control Flow:
 
-Shared mutable state passed through the graph
+Branching: Nodes can dictate the next step by modifying state["next"].
 
-Branching via setting state["next"]
+Looping: Support for repeating nodes until specific conditions (e.g., quality thresholds) are met.
 
-Looping by repeating nodes until a computed condition is satisfied
+Async Execution: Built on FastAPI’s BackgroundTasks for non-blocking workflow execution.
 
-Execution logs for debugging and traceability
-
-Async-safe execution via background tasks
+Execution Logs: Detailed tracing for debugging and history.
 
 2. Tool Registry
+A modular registry pattern to attach callable utilities.
 
-Simple registry for attaching callable utilities or tools
+Designed to be easily extendable for future AI agent tool calling.
 
-Easily extendable for future agent functionality
+3. API-First Design
+RESTful endpoints for creating graphs, triggering runs, and polling state.
 
-3. FastAPI Endpoints
+Auto-generated documentation via Swagger UI.
 
-POST /graph/create
-
-GET /graph/create (convenience for browser testing)
-
-POST /graph/run
-
-GET /graph/state/{run_id}
-
-4. Example Workflow: Code Review Agent
-
-A deterministic, rule-based workflow that:
-
-Extracts functions from code
-
-Calculates complexity
-
-Detects basic issues
-
-Suggests improvements
-
-Loops until the quality score meets a threshold
-
-Project Structure
+📂 Project Structure
+The project follows a clean architecture pattern to keep logic isolated and maintainable.
 
 app/
-  main.py
-  routers/
-    graph.py
-  engine/
-    workflow.py
-    registry.py
-  workflows/
-    code_review.py
-  db/
-    memory_store.py
-requirements.txt
-README.md
+├── main.py                  # Entry point and FastAPI app definition
+├── routers/
+│   └── graph.py             # API endpoints (Create, Run, Check State)
+├── engine/
+│   ├── workflow.py          # Core logic: Graph, Node, and Execution Engine
+│   └── registry.py          # Tool/Function registry
+├── workflows/
+│   └── code_review.py       # Example Implementation: Code Review Agent
+└── db/
+    └── memory_store.py      # In-memory storage (mock DB)
+requirements.txt             # Project dependencies
+README.md                    # Documentation
+🛠️ Installation & Setup
+Prerequisites
+Python 3.8+
 
-This structure keeps logic isolated, modular, and easy to extend.
+Step 1: Create a Virtual Environment
+Windows:
 
-How to Run
-Step 1: Create virtual environment
+PowerShell
 
-Windows
 python -m venv .venv
 .venv\Scripts\activate
+macOS/Linux:
 
-macOS/Linux
+Bash
+
 python3 -m venv .venv
 source .venv/bin/activate
-
-Step 2: Install dependencies
+Step 2: Install Dependencies
+Bash
 
 pip install --upgrade pip
 pip install -r requirements.txt
-
-Step 3: Start the server
+Step 3: Run the Server
+Bash
 
 uvicorn app.main:app --reload
+The server will start at http://127.0.0.1:8000.
 
-Step 4: Open API docs
+📖 API Usage
+Interactive API documentation is available at: http://127.0.0.1:8000/docs
 
-http://127.0.0.1:8000/docs
+1. Initialize a Workflow
+Define which graph definition to load into the engine.
 
-API Usage
-1. Create a Workflow Graph
+Endpoint: POST /graph/create
 
-POST /graph/create
 Body:
+
+JSON
+
 { "graph_name": "code_review" }
 Response:
-{ "graph_id": "..." }
 
-For quick browser testing:
-GET /graph/create
+JSON
 
-2. Run Workflow
+{ "graph_id": "550e8400-e29b-..." }
+2. Execute a Run
+Trigger an asynchronous execution of the workflow with an initial state.
 
-POST /graph/run
-Body example:
+Endpoint: POST /graph/run
+
+Body:
+
+JSON
+
 {
-"graph_id": "<graph_id>",
-"initial_state": {
-"code": "def a(): pass",
-"threshold": 80
+  "graph_id": "<graph_id_from_step_1>",
+  "initial_state": {
+    "code": "def a(): pass",
+    "threshold": 80
+  }
 }
-}
+Response:
+
+JSON
+
+{ "run_id": "abc-123-xyz" }
+3. Check Execution State
+Retrieve the status, logs, and final output of a run.
+
+Endpoint: GET /graph/state/{run_id}
 
 Response:
-{ "run_id": "..." }
 
-3. Retrieve Run State
+Current Status (running, completed, failed)
 
-GET /graph/state/<run_id>
-Returns:
+Final Shared State
 
-status
+Execution Log (Trace of nodes visited)
 
-final state
+🤖 Example Workflow: Code Review Agent
+Included in workflows/code_review.py is a deterministic, rule-based workflow that demonstrates the engine's capabilities:
 
-execution log
+Extraction: Parses functions from the raw code string.
 
-What the Engine Supports
+Analysis: Calculates complexity and detects basic issues (e.g., missing docstrings).
 
-Graph-based processing
+Scoring: Assigns a quality score.
 
-Dynamic branching
+Looping Logic:
 
-Conditional looping
+If score < threshold: The workflow loops back to an "Improvement" node, attempts to fix the code, and re-analyzes.
 
-Background execution
+If score >= threshold: The workflow terminates.
 
-Modular workflow definitions
+This demonstrates conditional looping and state mutation effectively.
 
-Tool registry
+🔮 Future Improvements
+While this is a minimal submission, the following features would elevate the engine to production-grade:
 
-In-memory task tracking
+Persistence: Replace in-memory storage with SQLite or PostgreSQL for durability.
 
-Clean async-capable design
+Real-time Updates: Implement WebSockets to stream node execution logs to the client.
 
-This matches the expected core evaluation criteria for the assignment:
-clarity, structure, state-driven transitions, async hygiene, and maintainability.
+Validation: Use Pydantic models for strict Node input/output validation.
 
-Future Improvements (If Time Allowed)
+Visualization: A frontend or metadata endpoint to visually render the graph DAG.
 
-WebSocket log streaming for real-time node execution updates
+Docker: Containerization for easier deployment.
 
-Persistent storage using SQLite/PostgreSQL
+CI/CD: GitHub Actions for automated testing.
 
-Visual graph inspector or metadata endpoint
-
-Node input/output validation using Pydantic models
-
-Multiple workflow registration API
-
-Docker support for production deployment
-
-Unit tests and GitHub Actions continuous integration
-
-These enhancements would elevate the engine from minimal demo to production-grade orchestration.
-
-License
-
-This project is submitted as part of an AI Engineering Internship assignment and is intended to demonstrate backend engineering principles and clean system design.
+📄 Context
+Submission for: AI Engineering Internship Assignment Focus: Backend engineering principles, system design, async hygiene, and maintainability.
