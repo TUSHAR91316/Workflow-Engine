@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, BackgroundTasks
 from uuid import uuid4
 from pydantic import BaseModel
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 
 from app.engine.workflow import Workflow, Node
 from app.db.memory_store import graphs, runs
@@ -21,12 +21,19 @@ class GraphRunRequest(BaseModel):
 async def create_graph(req: GraphCreateRequest):
     if req.graph_name != "code_review":
         raise HTTPException(status_code=400, detail="Only 'code_review' supported")
-
     cfg = build_code_review_graph()
-
     nodes = {name: Node(name, func) for name, func in cfg["nodes"].items()}
     wf = Workflow(nodes, cfg["edges"], cfg["start"])
+    graph_id = str(uuid4())
+    graphs[graph_id] = wf
+    return {"graph_id": graph_id}
 
+
+@router.get("/graph/create")
+async def create_graph_get():
+    cfg = build_code_review_graph()
+    nodes = {name: Node(name, func) for name, func in cfg["nodes"].items()}
+    wf = Workflow(nodes, cfg["edges"], cfg["start"])
     graph_id = str(uuid4())
     graphs[graph_id] = wf
     return {"graph_id": graph_id}
@@ -34,7 +41,7 @@ async def create_graph(req: GraphCreateRequest):
 
 @router.post("/graph/run")
 async def run_graph(req: GraphRunRequest, background_tasks: BackgroundTasks):
-    wf = graphs.get(req.graph_id)
+    wf: Optional[Workflow] = graphs.get(req.graph_id)
     if wf is None:
         raise HTTPException(status_code=404, detail="Graph not found")
 
@@ -53,7 +60,7 @@ async def run_graph(req: GraphRunRequest, background_tasks: BackgroundTasks):
             runs[run_id]["log"] = log
         except Exception as e:
             runs[run_id]["status"] = "failed"
-            runs[run_id]["log"] = [f"Execution error: {e}"]
+            runs[run_id]["log"] = [str(e)]
 
     background_tasks.add_task(_execute)
     return {"run_id": run_id}
